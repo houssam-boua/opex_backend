@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 # Load .env file
 load_dotenv()
@@ -119,16 +120,21 @@ DATABASES = {
     }
 }
 
+REDIS_URL = os.environ.get("REDIS_URL")
+if not DEBUG and not REDIS_URL:
+    raise ImproperlyConfigured("REDIS_URL is required in production for Celery and WebSockets")
+REDIS_URL = REDIS_URL or "redis://localhost:6379/0"
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG":  {"hosts": [(os.environ.get("REDIS_HOST", "127.0.0.1"), 6379)]},
+        "CONFIG":  {"hosts": [REDIS_URL]},
     }
 }
 
 # Celery
-CELERY_BROKER_URL     = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
-CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+CELERY_BROKER_URL     = os.environ.get("CELERY_BROKER_URL", REDIS_URL)
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", REDIS_URL)
 CELERY_ACCEPT_CONTENT     = ["json"]
 CELERY_TASK_SERIALIZER    = "json"
 CELERY_RESULT_SERIALIZER  = "json"

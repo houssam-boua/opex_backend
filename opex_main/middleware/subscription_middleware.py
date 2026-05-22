@@ -36,6 +36,16 @@ class SubscriptionMiddleware(MiddlewareMixin):
         if not tenant:
             return None
 
+        if getattr(tenant, "is_deleted", False) or getattr(tenant, "archived_at", None):
+            return JsonResponse(
+                {
+                    "error": "tenant_archived",
+                    "message": "Ce tenant est archivÃ© ou supprimÃ©. Contactez support@opex.app.",
+                    "status": tenant.status,
+                },
+                status=403,
+            )
+
         if not tenant.is_active:
             return JsonResponse(
                 {

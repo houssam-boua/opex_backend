@@ -19,7 +19,8 @@ class TenantMiddleware(MiddlewareMixin):
             if slug not in ("app", "www", "api", "admin"):
                 try:
                     tenant = Tenant.objects.select_related("license").get(
-                        slug=slug, status__in=["active", "trial"]
+                        slug=slug,
+                        is_deleted=False,
                     )
                 except Tenant.DoesNotExist:
                     pass

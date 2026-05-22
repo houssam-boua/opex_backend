@@ -40,7 +40,9 @@ class MachineViewSet(TPMBaseViewSet):
 
     def get_queryset(self):
         return Machine.objects.filter(
-            tenant=self.request.tenant
+            tenant=self.request.tenant,
+            is_active=True,
+            is_deleted=False,
         ).select_related("created_by")
 
 
@@ -49,6 +51,13 @@ class ProductionReportViewSet(TPMBaseViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ["machine", "operateur", "est_valide"]
     ordering_fields = ["date"]
+
+    def get_queryset(self):
+        return ProductionReport.objects.filter(
+            tenant=self.request.tenant,
+            is_active=True,
+            is_deleted=False,
+        ).select_related("machine", "operateur", "validateur", "cause_rebut_principale")
 
     @action(detail=True, methods=["get"])
     def kpi(self, request, pk=None):
@@ -74,6 +83,13 @@ class BreakdownViewSet(TPMBaseViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ["machine", "statut", "technicien", "operateur"]
     ordering_fields = ["date_declaration"]
+
+    def get_queryset(self):
+        return Breakdown.objects.filter(
+            tenant=self.request.tenant,
+            is_active=True,
+            is_deleted=False,
+        ).select_related("machine", "operateur", "chef_equipe", "technicien", "superviseur")
 
     def perform_create(self, serializer):
         breakdown = serializer.save(tenant=self.request.tenant, created_by=self.request.user)
@@ -113,6 +129,13 @@ class MaintenanceTaskViewSet(TPMBaseViewSet):
     filterset_fields = ["machine", "statut", "type_tache", "technicien"]
     ordering_fields = ["deadline"]
 
+    def get_queryset(self):
+        return MaintenanceTask.objects.filter(
+            tenant=self.request.tenant,
+            is_active=True,
+            is_deleted=False,
+        ).select_related("machine", "technicien", "panne")
+
     def perform_create(self, serializer):
         task = serializer.save(tenant=self.request.tenant, created_by=self.request.user)
         task.sync_to_shared_action()
@@ -130,8 +153,10 @@ class InterventionViewSet(TPMBaseViewSet):
 
     def get_queryset(self):
         return Intervention.objects.filter(
-            tenant=self.request.tenant
-        ).select_related("created_by")
+            tenant=self.request.tenant,
+            is_active=True,
+            is_deleted=False,
+        ).select_related("panne", "technicien", "created_by")
 
 
 class ChecklistViewSet(TPMBaseViewSet):
@@ -142,8 +167,10 @@ class ChecklistViewSet(TPMBaseViewSet):
 
     def get_queryset(self):
         return ChecklistExecution.objects.filter(
-            tenant=self.request.tenant
-        ).select_related("created_by")
+            tenant=self.request.tenant,
+            is_active=True,
+            is_deleted=False,
+        ).select_related("intervention", "template", "created_by")
 
 
 class KaizenViewSet(TPMBaseViewSet):
@@ -151,6 +178,13 @@ class KaizenViewSet(TPMBaseViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ["machine", "statut", "priorite", "auteur"]
     ordering_fields = ["created_at"]
+
+    def get_queryset(self):
+        return Kaizen.objects.filter(
+            tenant=self.request.tenant,
+            is_active=True,
+            is_deleted=False,
+        ).select_related("machine", "auteur", "valide_par")
 
     def perform_create(self, serializer):
         kaizen = serializer.save(tenant=self.request.tenant, created_by=self.request.user)

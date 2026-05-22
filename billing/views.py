@@ -117,6 +117,9 @@ class TenantAdminViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Tenant.objects.select_related("license").all()
 
+    def perform_destroy(self, instance):
+        instance.soft_delete(user=self.request.user)
+
     @action(detail=True, methods=["post"])
     def suspend(self, request, id=None):
         tenant = self.get_object()
@@ -128,7 +131,26 @@ class TenantAdminViewSet(viewsets.ModelViewSet):
     def reactivate(self, request, id=None):
         tenant = self.get_object()
         tenant.status = "active"
-        tenant.save(update_fields=["status", "updated_at"])
+        tenant.is_deleted = False
+        tenant.deleted_at = None
+        tenant.deleted_by = None
+        tenant.archived_at = None
+        tenant.archived_by = None
+        tenant.save(update_fields=[
+            "status",
+            "is_deleted",
+            "deleted_at",
+            "deleted_by",
+            "archived_at",
+            "archived_by",
+            "updated_at",
+        ])
+        return Response(self.get_serializer(tenant).data)
+
+    @action(detail=True, methods=["post"])
+    def archive(self, request, id=None):
+        tenant = self.get_object()
+        tenant.archive(user=request.user)
         return Response(self.get_serializer(tenant).data)
 
     @action(detail=True, methods=["get", "patch"])

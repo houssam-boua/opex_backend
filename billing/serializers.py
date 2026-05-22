@@ -109,11 +109,14 @@ class TenantAdminSerializer(serializers.ModelSerializer):
             "subscription_ends_at",
             "max_users",
             "trial_ends_at",
+            "is_deleted",
+            "deleted_at",
+            "archived_at",
             "license",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "license", "created_at", "updated_at"]
+        read_only_fields = ["id", "is_deleted", "deleted_at", "archived_at", "license", "created_at", "updated_at"]
 
     def get_license(self, obj):
         license_obj, _ = TenantLicense.objects.get_or_create(tenant=obj)

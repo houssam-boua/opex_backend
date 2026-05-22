@@ -1,6 +1,8 @@
 # core/models.py
 import uuid
+from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Tenant(models.Model):
@@ -17,6 +19,23 @@ class Tenant(models.Model):
     max_users              = models.IntegerField(default=10)
     trial_ends_at          = models.DateField(null=True, blank=True)
     subscription_ends_at   = models.DateField(null=True, blank=True)
+    is_deleted             = models.BooleanField(default=False)
+    deleted_at             = models.DateTimeField(null=True, blank=True)
+    deleted_by             = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="deleted_tenants",
+    )
+    archived_at            = models.DateTimeField(null=True, blank=True)
+    archived_by            = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="archived_tenants",
+    )
     created_at             = models.DateTimeField(auto_now_add=True)
     updated_at             = models.DateTimeField(auto_now=True)
 
@@ -28,7 +47,33 @@ class Tenant(models.Model):
 
     @property
     def is_active(self):
-        return self.status in ["active", "trial"]
+        return not self.is_deleted and self.status in ["active", "trial"]
+
+    def soft_delete(self, user=None):
+        """Suspend a tenant without cascading business data deletion."""
+        self.status = "suspended"
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.deleted_by = user if getattr(user, "is_authenticated", True) else None
+        self.save(update_fields=[
+            "status",
+            "is_deleted",
+            "deleted_at",
+            "deleted_by",
+            "updated_at",
+        ])
+
+    def archive(self, user=None):
+        """Archive a tenant while preserving all related business records."""
+        self.status = "suspended"
+        self.archived_at = timezone.now()
+        self.archived_by = user if getattr(user, "is_authenticated", True) else None
+        self.save(update_fields=[
+            "status",
+            "archived_at",
+            "archived_by",
+            "updated_at",
+        ])
 
 
 class TenantLicense(models.Model):
