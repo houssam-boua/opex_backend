@@ -49,13 +49,13 @@ app.conf.beat_schedule = {
         "schedule": crontab(hour=7, minute=0),
     },
 
-    # DÃ©tection des routines obligatoires manquÃ©es â€” tous les jours Ã  5h30
+    # Détection des routines obligatoires manquées — tous les jours à 5h30
     "routines-check-missed-executions-daily": {
         "task":     "modules.routines.tasks.check_missed_routine_executions_task",
         "schedule": crontab(hour=5, minute=30),
     },
 
-    # DÃ©tection des vÃ©rifications Poka-Yoke en retard â€” tous les jours Ã  6h00
+    # Détection des vérifications Poka-Yoke en retard — tous les jours à 6h00
     "poka-yoke-check-overdue-verifications-daily": {
         "task":     "modules.poka_yoke.tasks.check_overdue_poka_yoke_verifications_task",
         "schedule": crontab(hour=6, minute=0),
