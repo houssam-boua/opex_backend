@@ -22,7 +22,7 @@ def generate_license_key(plan_name: str, duration_days: int = 365, created_by=No
     Returns:
         LicenseKey instance avec clé auto-générée
     """
-    plan = SubscriptionPlan.objects.get(name=plan_name)
+    plan = SubscriptionPlan.objects.get(name=plan_name, is_active=True)
     return LicenseKey.objects.create(
         plan=plan,
         duration_days=duration_days,
@@ -51,7 +51,10 @@ def activate_license_key(tenant: Tenant, key_string: str) -> dict:
     from django.db import transaction
 
     try:
-        license_key = LicenseKey.objects.select_related("plan").get(key=key_string)
+        license_key = LicenseKey._base_manager.select_related("plan").get(
+            key=key_string,
+            is_deleted=False,
+        )
     except LicenseKey.DoesNotExist:
         raise ValueError("Clé de licence invalide.")
 

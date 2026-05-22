@@ -27,6 +27,7 @@ class SubscriptionPlan(models.Model):
     modules      = models.JSONField(default=list)  # ["gemba","capa","5s","messaging"]
     is_active    = models.BooleanField(default=True)
     created_at   = models.DateTimeField(auto_now_add=True)
+    updated_at   = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "billing_plans"
