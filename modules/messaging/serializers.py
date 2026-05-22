@@ -15,8 +15,11 @@ def _validate_tenant_object(obj, tenant, message):
 class ConversationParticipantSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConversationParticipant
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at"]
+        fields = [
+            "id", "conversation", "user", "role", "last_read_at",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
     def validate_user(self, value):
         if not value:
@@ -38,8 +41,11 @@ class ConversationParticipantSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at", "sender", "is_system_generated"]
+        fields = [
+            "id", "conversation", "sender", "content", "is_system_generated",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "sender", "is_system_generated", "created_at", "updated_at"]
 
     def validate(self, attrs):
         tenant = _request_tenant(self)
@@ -55,8 +61,11 @@ class ConversationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Conversation
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at"]
+        fields = [
+            "id", "title", "status", "content_type", "object_id",
+            "participants", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "participants", "created_at", "updated_at"]
 
     def validate(self, attrs):
         tenant = _request_tenant(self)

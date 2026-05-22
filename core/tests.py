@@ -1,9 +1,13 @@
+import inspect
+from importlib import import_module
 from datetime import timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.test import override_settings
 from django.utils import timezone
+from rest_framework import serializers
 from rest_framework.test import APITestCase
 
 from accounts.models import CustomUser, Employee
@@ -125,6 +129,11 @@ class ProductionSafetyTests(APITestCase):
             self.assertIn(str(own_id), ids)
             self.assertNotIn(str(foreign_id), ids)
 
+        machine_response = self.client.get("/api/v1/tpm/machines/", HTTP_HOST=self.tenant_host(tenant_a))
+        machine_row = next(row for row in machine_response.data["results"] if str(row["id"]) == str(machine_a.id))
+        for internal_field in ("tenant", "is_deleted", "deleted_at", "created_by"):
+            self.assertNotIn(internal_field, machine_row)
+
         response = self.client.post(
             "/api/v1/poka-yoke/devices/",
             {
@@ -137,6 +146,31 @@ class ProductionSafetyTests(APITestCase):
             HTTP_HOST=self.tenant_host(tenant_a),
         )
         self.assertEqual(response.status_code, 400)
+
+    def test_no_project_serializer_uses_fields_all(self):
+        forbidden_fields_value = "__" + "all__"
+        offenders = []
+        for root in ("accounts", "billing", "core", "shared", "modules"):
+            root_path = settings.BASE_DIR / root
+            if not root_path.exists():
+                continue
+            for serializer_path in root_path.rglob("serializers.py"):
+                module_name = ".".join(serializer_path.relative_to(settings.BASE_DIR).with_suffix("").parts)
+                module = import_module(module_name)
+                for class_name, candidate in vars(module).items():
+                    if (
+                        inspect.isclass(candidate)
+                        and issubclass(candidate, serializers.ModelSerializer)
+                        and candidate is not serializers.ModelSerializer
+                    ):
+                        meta = getattr(candidate, "Meta", None)
+                        if getattr(meta, "fields", None) == forbidden_fields_value:
+                            offenders.append(f"{module_name}.{class_name}")
+
+        self.assertFalse(
+            offenders,
+            "Serializers must use explicit Meta.fields: " + ", ".join(offenders),
+        )
 
     def test_module_licensing_blocks_and_restores_endpoint_access(self):
         tenant = self.make_tenant("licensed-tenant")

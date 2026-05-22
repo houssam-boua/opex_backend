@@ -8,26 +8,38 @@ from .models import (
 class ISO9001ClauseSerializer(serializers.ModelSerializer):
     class Meta:
         model = ISO9001Clause
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at"]
+        fields = [
+            "id", "clause_number", "title", "description", "parent",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 class ComplianceAssessmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ComplianceAssessment
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at"]
+        fields = [
+            "id", "clause", "assessor", "score", "status", "evidence",
+            "date", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "date", "created_at", "updated_at"]
 
 class NonConformitySerializer(serializers.ModelSerializer):
     class Meta:
         model = NonConformity
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at"]
+        fields = [
+            "id", "clause", "description", "severity", "detected_by",
+            "detected_at", "status", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "detected_at", "created_at", "updated_at"]
 
 class CorrectiveActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = CorrectiveAction
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at"]
+        fields = [
+            "id", "non_conformity", "description", "owner", "deadline",
+            "status", "verified_by", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
     def validate_deadline(self, value):
         from django.utils import timezone
@@ -38,8 +50,11 @@ class CorrectiveActionSerializer(serializers.ModelSerializer):
 class ISODocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ISODocument
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at"]
+        fields = [
+            "id", "title", "clause", "file_path", "version", "valid_from",
+            "valid_until", "uploaded_by", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -49,17 +64,23 @@ class ISODocumentSerializer(serializers.ModelSerializer):
 class ISO9001EvaluationSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ISO9001EvaluationSession
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at", "global_score"]
+        fields = [
+            "id", "title", "evaluator", "status", "global_score",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "global_score", "created_at", "updated_at"]
 
 class ISO9001QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ISO9001Question
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at"]
+        fields = ["id", "clause", "question_text", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 class ISO9001ResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = ISO9001Response
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at"]
+        fields = [
+            "id", "session", "question", "response_status",
+            "evidence_notes", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]

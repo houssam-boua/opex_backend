@@ -5,15 +5,19 @@ from .models import RiskCategory, Risk, RiskAssessment, RiskMitigationAction, Ri
 class RiskCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = RiskCategory
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at"]
+        fields = ["id", "name", "description", "color_code", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class RiskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Risk
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at", "risk_score"]
+        fields = [
+            "id", "title", "description", "category", "severity",
+            "likelihood", "impact", "risk_score", "owner", "status",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "risk_score", "created_at", "updated_at"]
 
     def validate(self, data):
         likelihood = data.get("likelihood")
@@ -29,15 +33,18 @@ class RiskSerializer(serializers.ModelSerializer):
 class RiskAssessmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = RiskAssessment
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at", "updated_score", "date"]
+        fields = ["id", "risk", "assessor", "date", "notes", "updated_score", "created_at", "updated_at"]
+        read_only_fields = ["id", "date", "updated_score", "created_at", "updated_at"]
 
 
 class RiskMitigationActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = RiskMitigationAction
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at"]
+        fields = [
+            "id", "risk", "description", "owner", "deadline", "status",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
     def validate_deadline(self, value):
         from django.utils import timezone
@@ -49,5 +56,8 @@ class RiskMitigationActionSerializer(serializers.ModelSerializer):
 class RiskHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = RiskHistory
-        fields = "__all__"
-        read_only_fields = ["tenant", "created_by", "created_at", "updated_at"]
+        fields = [
+            "id", "risk", "old_score", "new_score", "changed_by",
+            "changed_at", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "changed_at", "created_at", "updated_at"]
